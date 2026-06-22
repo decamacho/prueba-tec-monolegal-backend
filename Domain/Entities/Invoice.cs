@@ -1,0 +1,32 @@
+﻿using Domain.Enums;
+
+namespace Domain.Entities
+{
+    public class Invoice
+    {
+        public string Id { get; set; } = string.Empty;
+        public string CodigoFactura { get; set; } = string.Empty;
+        public DateTime FechaEmision { get; set; }
+        public Client Receptor { get; set; } = new Client();
+        public FinanceResume ResumenFinanciero { get; set; } = new FinanceResume();
+
+        public InvoiceState Estado { get; private set; }
+
+        public void SetEstadoInicial(InvoiceState estado)
+        {
+            Estado = estado;
+        }
+
+        public void TransicionarEstado()
+        {
+            if (Estado == InvoiceState.primerrecordatorio)
+            {
+                Estado = InvoiceState.segundorecordatorio;
+            }
+            else if (Estado == InvoiceState.segundorecordatorio)
+            {
+                Estado = InvoiceState.desactivado;
+            }
+        }
+    }
+}
