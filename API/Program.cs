@@ -16,22 +16,24 @@ builder.Services.AddSingleton<MongoDbContext>();
 
 // registrar los repositorios (Scoped significa que se crea una instancia por cada petición HTTP)
 builder.Services.AddScoped<IInvoiceRepository, MongoDbInvoiceRepository>();
-builder.Services.AddScoped<IProcessInvoiceReminders, ProcessInvoiceRemindersUseCase>();
 builder.Services.AddScoped<IEmailService, Infrastructure.Services.LoggerEmailService>();
+builder.Services.AddScoped<IProcessInvoiceReminders, ProcessInvoiceRemindersUseCase>();
 
 // configuracion estandar de la API
 builder.Services.AddControllers();
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(); // Swagger sirve para probar sin frontend
+
+// builder.Services.AddEndpointsApiExplorer();
+// builder.Services.AddSwaggerGen(); 
+// Swagger sirve para probar sin frontend
 
 var app = builder.Build();
 
-// 5. Middleware pipeline
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+// middleware pipeline
+//if (app.Environment.IsDevelopment())
+//{
+//    app.UseSwagger();
+//    app.UseSwaggerUI();
+//}
 
 app.UseAuthorization();
 app.MapControllers();

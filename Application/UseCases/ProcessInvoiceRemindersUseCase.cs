@@ -62,7 +62,7 @@ namespace Application.UseCases
                 EmailContacto = f.Cliente.EmailContacto,
                 CantidadProductos = f.Items.Count,
 
-                TotalCobro = f.FinanceResume.Total,
+                TotalCobro = f.ResumenFinanciero.Total,
                 EstadoActual = f.Estado.ToString()
             });
         }
