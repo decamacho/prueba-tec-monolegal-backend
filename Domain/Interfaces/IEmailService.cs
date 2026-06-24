@@ -5,6 +5,6 @@ namespace Domain.Interfaces
 {
     public interface IEmailService
     {
-        Task<bool> EnviarNotificacionAsync(Client receptor, InvoiceState nuevoEstado);
+        Task<bool> EnviarNotificacionAsync(Invoice factura, InvoiceState nuevoEstado);
     }
 }

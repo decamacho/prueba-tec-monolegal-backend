@@ -2,6 +2,6 @@
 {
     public class FinanceResume
     {
-        public decimal Total { get; set; }
+        public int Total { get; set; }
     }
 }

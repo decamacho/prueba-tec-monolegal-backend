@@ -1,6 +1,7 @@
 ﻿using Domain.Entities;
 using Domain.Enums;
 using Domain.Interfaces;
+using MongoDB.Bson;
 using MongoDB.Driver;
 
 namespace Infrastructure.Persistence
@@ -29,6 +30,62 @@ namespace Infrastructure.Persistence
             var update = Builders<Invoice>.Update.Set(i => i.Estado, nuevoEstado);
 
             await _context.Invoices.UpdateOneAsync(filter, update);
+        }
+
+        public async Task<IEnumerable<Invoice>> ObtenerFacturasPorClienteAsync(string documentoCliente)
+        {
+            var filter = Builders<Invoice>.Filter.Eq(i => i.Cliente.Documento, documentoCliente);
+
+            return await _context.Invoices
+                .Find(filter)
+                .ToListAsync();
+        }
+
+        public async Task<Invoice> ObtenerFacturaPorIdAsync(string id)
+        {
+            var filter = Builders<Invoice>.Filter.Eq("_id", new ObjectId(id));
+
+            return await _context.Invoices
+                .Find(filter)
+                .FirstOrDefaultAsync();
+        }
+
+        // extraer clientes unicos basados en las facturas existentes
+        public async Task<IEnumerable<Client>> ObtenerClientesUnicosAsync()
+        {
+            return await _context.Invoices.Aggregate()
+                .Group(
+                    f => f.Cliente.Documento,
+
+                    g => new Client
+                    {
+                        Documento = g.Key,
+                        Nombre = g.First().Cliente.Nombre,
+                        EmailContacto = g.First().Cliente.EmailContacto,
+                        Telefono = g.First().Cliente.Telefono,
+                        Direccion = g.First().Cliente.Direccion,
+
+                        SumaFacturas = g.Count(),
+                        NumeroFacturas = g.Sum(f => f.ResumenFinanciero.Total)
+                    }
+                )
+                .ToListAsync();
+        }
+
+        // extraer ítems => productos unicos basados en el historico de facturas
+        public async Task<IEnumerable<dynamic>> ObtenerItemsUnicosAsync()
+        {
+            var facturas = await _context.Invoices.Find(_ => true).ToListAsync();
+
+            return facturas
+                .SelectMany(f => f.Items)
+                .GroupBy(i => i.Descripcion)
+                .Select(g => new
+                {
+                    Descripcion = g.Key,
+                    PrecioUnitario = g.First().PrecioUnitario
+                })
+                .ToList();
         }
     }
 }

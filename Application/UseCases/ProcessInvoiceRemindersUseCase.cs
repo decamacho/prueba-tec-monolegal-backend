@@ -1,5 +1,6 @@
 ﻿using Application.DTO;
 using Application.Interfaces;
+using Domain.Entities;
 using Domain.Enums;
 using Domain.Interfaces;
 
@@ -36,8 +37,7 @@ namespace Application.UseCases
                 // la entidad de dominio encapsula la regla de a que estado debe pasar
                 factura.TransicionarEstado();
 
-                // enviar el correo informando el NUEVO estado (segun la prueba)
-                bool correoEnviado = await _emailService.EnviarNotificacionAsync(factura.Cliente, factura.Estado);
+                bool correoEnviado = await _emailService.EnviarNotificacionAsync(factura, factura.Estado);
 
                 // solo si el correo se envio con exito, se actualiza la base de datos
                 if (correoEnviado)
@@ -65,6 +65,55 @@ namespace Application.UseCases
                 TotalCobro = f.ResumenFinanciero.Total,
                 EstadoActual = f.Estado.ToString()
             });
+        }
+
+        public async Task<IEnumerable<InvoiceSummaryDto>> ObtenerFacturasPorClienteAsync(string documentoCliente)
+        {
+            // obtener las facturas del cliente desde el repositorio
+            var facturas = await _invoiceRepository.ObtenerFacturasPorClienteAsync(documentoCliente);
+
+            // mapear a DTO para mantener limpia la salida hacia la interfaz grafica
+            return facturas.Select(f => new InvoiceSummaryDto
+            {
+                Id = f.Id,
+                CodigoFactura = f.CodigoFactura,
+                NombreCliente = f.Cliente.Nombre,
+                EmailContacto = f.Cliente.EmailContacto,
+                CantidadProductos = f.Items.Count,
+                TotalCobro = f.ResumenFinanciero.Total,
+                EstadoActual = f.Estado.ToString()
+            });
+        }
+
+        public async Task<bool> ProcesarRecordatorioFacturaAsync(string facturaId)
+        {
+            var factura = await _invoiceRepository.ObtenerFacturaPorIdAsync(facturaId);
+            if (factura == null || factura.Estado == InvoiceState.desactivado)
+            {
+                return false;
+            }
+
+            factura.TransicionarEstado();
+
+            bool correoEnviado = await _emailService.EnviarNotificacionAsync(factura, factura.Estado);
+
+            if (correoEnviado)
+            {
+                await _invoiceRepository.ActualizarEstadoFacturaAsync(factura.Id, factura.Estado);
+                return true;
+            }
+
+            return false;
+        }
+
+        public async Task<IEnumerable<Client>> ObtenerClientesExistentesAsync()
+        {
+            return await _invoiceRepository.ObtenerClientesUnicosAsync();
+        }
+
+        public async Task<IEnumerable<dynamic>> ObtenerItemsExistentesAsync()
+        {
+            return await _invoiceRepository.ObtenerItemsUnicosAsync();
         }
     }
 }
