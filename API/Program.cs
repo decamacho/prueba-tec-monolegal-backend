@@ -16,6 +16,7 @@ builder.Services.Configure<MongoDbSettings>(
 // registrar por la interfaz para evitar depender de la clase concreta
 builder.Services.AddSingleton<IMongoDbContext, MongoDbContext>();
 
+// registrar AppLogger genérico para inyectar IAppLogger<T> en la capa Application
 builder.Services.AddSingleton(typeof(Application.Interfaces.IAppLogger<>), typeof(Infrastructure.Logging.AppLogger<>));
 
 var sendGridApiKey = builder.Configuration["SendGrid:ApiKey"];
