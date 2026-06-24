@@ -8,9 +8,9 @@ namespace Infrastructure.Persistence
 {
     public class MongoDbInvoiceRepository : IInvoiceRepository
     {
-        private readonly MongoDbContext _context;
+        private readonly IMongoDbContext _context;
 
-        public MongoDbInvoiceRepository(MongoDbContext context)
+        public MongoDbInvoiceRepository(IMongoDbContext context)
         {
             _context = context;
         }
@@ -57,17 +57,18 @@ namespace Infrastructure.Persistence
                 .Group(
                     f => f.Cliente.Documento,
 
-                    g => new Client
-                    {
-                        Documento = g.Key,
-                        Nombre = g.First().Cliente.Nombre,
-                        EmailContacto = g.First().Cliente.EmailContacto,
-                        Telefono = g.First().Cliente.Telefono,
-                        Direccion = g.First().Cliente.Direccion,
+                g => new Client
+                {
+                    Documento = g.Key,
+                    Nombre = g.First().Cliente.Nombre,
+                    EmailContacto = g.First().Cliente.EmailContacto,
+                    Telefono = g.First().Cliente.Telefono,
+                    Direccion = g.First().Cliente.Direccion,
 
-                        SumaFacturas = g.Count(),
-                        NumeroFacturas = g.Sum(f => f.ResumenFinanciero.Total)
-                    }
+                    // Corregir mapeo: SumaFacturas debe ser la suma de totales, NumeroFacturas el conteo
+                    SumaFacturas = g.Sum(f => f.ResumenFinanciero.Total),
+                    NumeroFacturas = g.Count()
+                }
                 )
                 .ToListAsync();
         }

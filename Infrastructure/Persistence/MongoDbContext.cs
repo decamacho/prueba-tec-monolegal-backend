@@ -1,6 +1,7 @@
 ﻿using Domain.Entities;
 using Infrastructure.Configurations;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Conventions;
@@ -11,14 +12,17 @@ using MongoDB.Driver;
 namespace Infrastructure.Persistence
 {
     public class MongoDbContext
+        : IMongoDbContext
     {
         private readonly IMongoDatabase _database;
+        private readonly ILogger<MongoDbContext> _logger;
 
-        public MongoDbContext(IOptions<MongoDbSettings> mongoSettings)
+        public MongoDbContext(IOptions<MongoDbSettings> mongoSettings, ILogger<MongoDbContext> logger)
         {
+            _logger = logger;
 
-            Console.WriteLine($"=== CONECTANDO A DB: {mongoSettings.Value.DatabaseName} ===");
-            Console.WriteLine($"=== CONNECTION STRING: {mongoSettings.Value.ConnectionString} ===");
+            _logger.LogInformation("=== CONECTANDO A DB: {Database} ===", mongoSettings.Value.DatabaseName);
+            _logger.LogDebug("=== CONNECTION STRING: {ConnectionString} ===", mongoSettings.Value.ConnectionString);
 
             // convenciones globales: CamelCase y Enums como Textos
             var conventionPack = new ConventionPack
@@ -47,5 +51,6 @@ namespace Infrastructure.Persistence
         }
 
         public IMongoCollection<Invoice> Invoices => _database.GetCollection<Invoice>("invoices");
+        public IMongoCollection<T> GetCollection<T>(string name) => _database.GetCollection<T>(name);
     }
 }

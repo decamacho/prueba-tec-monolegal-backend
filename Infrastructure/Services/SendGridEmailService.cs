@@ -36,7 +36,6 @@ namespace Infrastructure.Services
                     ? $"Aviso sobre el estado de sus servicios - Factura {factura.CodigoFactura}"
                     : $"Notificación de Estado de Factura {factura.CodigoFactura} - Monolegal";
 
-                // 2. Construcción del cuerpo del mensaje según el estado
                 string mensajePrincipal = nuevoEstado switch
                 {
                     InvoiceState.primerrecordatorio =>
@@ -56,12 +55,12 @@ namespace Infrastructure.Services
                         <div style='background-color: #f8fafc; padding: 20px; border-bottom: 1px solid #e5e7eb; text-align: center;'>
                             <h2 style='color: #1e293b; margin: 0;'>{_fromName}</h2>
                         </div>
-                        
+
                         <div style='padding: 30px;'>
                             <p>Estimado(a) <strong>{cliente.Nombre}</strong>,</p>
-                            
+
                             <p style='margin-bottom: 24px;'>{mensajePrincipal}</p>
-                            
+
                             <div style='background-color: #f1f5f9; padding: 15px; border-left: 4px solid #9ecb24; border-radius: 4px; margin-bottom: 24px;'>
                                 <p style='margin: 0; font-size: 14px;'>
                                     <strong>¿Ya realizó el pago?</strong><br/>
@@ -71,7 +70,7 @@ namespace Infrastructure.Services
 
                             <p>Si tiene alguna duda o necesita asistencia con sus opciones de pago, nuestro equipo de soporte está a su entera disposición.</p>
                         </div>
-                        
+
                         <div style='background-color: #f8fafc; padding: 20px; border-top: 1px solid #e5e7eb; font-size: 12px; color: #64748b; text-align: center;'>
                             <p style='margin: 0 0 5px 0;'>Atentamente,</p>
                             <p style='margin: 0; font-weight: bold; color: #1e293b; font-size: 14px;'>El equipo de {_fromName}</p>

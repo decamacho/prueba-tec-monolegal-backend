@@ -4,23 +4,27 @@ using Domain.Enums;
 using Domain.Interfaces;
 using Moq;
 using Xunit;
+using Microsoft.Extensions.Logging;
 
 namespace Test
 {
     public class ProcessInvoiceRemindersUseCaseTests
     {
         private readonly Mock<IInvoiceRepository> _invoiceRepositoryMock;
-        private readonly Mock<IEmailService> _emailServiceMock;
+        private readonly Mock<IEmailService> _email_serviceMock;
+        private readonly Mock<Application.Interfaces.IAppLogger<ProcessInvoiceRemindersUseCase>> _loggerMock;
         private readonly ProcessInvoiceRemindersUseCase _useCase;
 
         public ProcessInvoiceRemindersUseCaseTests()
         {
             _invoiceRepositoryMock = new Mock<IInvoiceRepository>();
-            _emailServiceMock = new Mock<IEmailService>();
+            _email_serviceMock = new Mock<IEmailService>();
+            _loggerMock = new Mock<Application.Interfaces.IAppLogger<ProcessInvoiceRemindersUseCase>>();
 
             _useCase = new ProcessInvoiceRemindersUseCase(
                 _invoiceRepositoryMock.Object,
-                _emailServiceMock.Object
+                _email_serviceMock.Object,
+                _loggerMock.Object
             );
         }
 
@@ -44,9 +48,9 @@ namespace Test
                 .Setup(repo => repo.ObtenerFacturasPorEstadosAsync(It.IsAny<List<InvoiceState>>()))
                 .ReturnsAsync(listaFacturas);
 
-            _emailServiceMock
+            _email_serviceMock
                 .Setup(email => email.EnviarNotificacionAsync(It.IsAny<Invoice>(), It.IsAny<InvoiceState>()))
-                .ReturnsAsync(true); // Simulamos que el correo se envió con éxito
+                .ReturnsAsync(true);
 
             // Act
             await _useCase.ProcesarRecordatoriosAsync();
@@ -56,11 +60,11 @@ namespace Test
             Assert.Equal(InvoiceState.segundorecordatorio, factura.Estado);
 
             // verificar que se intento enviar el correo con el nuevo estado
-            _emailServiceMock.Verify(
+            _email_serviceMock.Verify(
                 email => email.EnviarNotificacionAsync(factura, InvoiceState.segundorecordatorio),
                 Times.Once);
 
-            // verificar que se actualizó la base de datos
+            // verificar que se actualizo la base de datos
             _invoiceRepositoryMock.Verify(
                 repo => repo.ActualizarEstadoFacturaAsync(factura.Id, InvoiceState.segundorecordatorio),
                 Times.Once);
@@ -86,16 +90,16 @@ namespace Test
                 .Setup(repo => repo.ObtenerFacturasPorEstadosAsync(It.IsAny<List<InvoiceState>>()))
                 .ReturnsAsync(listaFacturas);
 
-            _emailServiceMock
+            _email_serviceMock
                 .Setup(email => email.EnviarNotificacionAsync(It.IsAny<Invoice>(), It.IsAny<InvoiceState>()))
-                .ReturnsAsync(false); // simular un FALLO en SendGrid
+                .ReturnsAsync(false);
 
             // Act
             await _useCase.ProcesarRecordatoriosAsync();
 
             // Assert
             // verificar que se intento enviar el correo
-            _emailServiceMock.Verify(
+            _email_serviceMock.Verify(
                 email => email.EnviarNotificacionAsync(factura, InvoiceState.desactivado),
                 Times.Once);
 

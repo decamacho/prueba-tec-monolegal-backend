@@ -3,6 +3,7 @@ using Application.Interfaces;
 using Domain.Entities;
 using Domain.Enums;
 using Domain.Interfaces;
+using Application.Interfaces;
 
 namespace Application.UseCases
 {
@@ -10,14 +11,17 @@ namespace Application.UseCases
     {
         private readonly IInvoiceRepository _invoiceRepository;
         private readonly IEmailService _emailService;
+        private readonly IAppLogger<ProcessInvoiceRemindersUseCase> _logger;
 
         // inyeccion de dependencias a traves del constructor
         public ProcessInvoiceRemindersUseCase(
             IInvoiceRepository invoiceRepository,
-            IEmailService emailService)
+            IEmailService emailService,
+            IAppLogger<ProcessInvoiceRemindersUseCase> logger)
         {
             _invoiceRepository = invoiceRepository;
             _emailService = emailService;
+            _logger = logger;
         }
 
         public async Task ProcesarRecordatoriosAsync()
@@ -34,15 +38,24 @@ namespace Application.UseCases
             // iteracion y procesar cada factura
             foreach (var factura in facturasParaProcesar)
             {
-                // la entidad de dominio encapsula la regla de a que estado debe pasar
-                factura.TransicionarEstado();
-
-                bool correoEnviado = await _emailService.EnviarNotificacionAsync(factura, factura.Estado);
-
-                // solo si el correo se envio con exito, se actualiza la base de datos
-                if (correoEnviado)
+                try
                 {
-                    await _invoiceRepository.ActualizarEstadoFacturaAsync(factura.Id, factura.Estado);
+                    // la entidad de dominio encapsula la regla de a que estado debe pasar
+                    factura.TransicionarEstado();
+
+                    bool correoEnviado = await _emailService.EnviarNotificacionAsync(factura, factura.Estado);
+
+                    // solo si el correo se envio con exito, se actualiza la base de datos
+                    if (correoEnviado)
+                    {
+                        await _invoiceRepository.ActualizarEstadoFacturaAsync(factura.Id, factura.Estado);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // Loguear el error y continuar con la siguiente factura para evitar detener el batch
+                    _logger?.LogError(ex, "Error procesando factura {InvoiceId}", factura?.Id);
+                    continue;
                 }
             }
         }

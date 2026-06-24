@@ -13,7 +13,10 @@ builder.Services.Configure<MongoDbSettings>(
 
 // registrar el contexto de MongoDB como Singleton
 // Singleton: porque la conexión a Mongo debe mantenerse viva y reutilizarse
-builder.Services.AddSingleton<MongoDbContext>();
+// registrar por la interfaz para evitar depender de la clase concreta
+builder.Services.AddSingleton<IMongoDbContext, MongoDbContext>();
+
+builder.Services.AddSingleton(typeof(Application.Interfaces.IAppLogger<>), typeof(Infrastructure.Logging.AppLogger<>));
 
 var sendGridApiKey = builder.Configuration["SendGrid:ApiKey"];
 var fromEmail = builder.Configuration["SendGrid:FromEmail"];

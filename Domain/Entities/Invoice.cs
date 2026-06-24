@@ -30,5 +30,32 @@ namespace Domain.Entities
                 Estado = InvoiceState.desactivado;
             }
         }
+
+        public void AgregarItem(InvoiceItem item)
+        {
+            if (item == null) throw new ArgumentNullException(nameof(item));
+
+            Items.Add(item);
+            RecalcularResumenFinanciero();
+        }
+
+        public bool RemoverItem(InvoiceItem item)
+        {
+            if (item == null) return false;
+
+            var removed = Items.Remove(item);
+            if (removed) RecalcularResumenFinanciero();
+            return removed;
+        }
+
+        public decimal CalcularTotal()
+        {
+            return Items.Sum(i => i.Cantidad * i.PrecioUnitario);
+        }
+
+        private void RecalcularResumenFinanciero()
+        {
+            ResumenFinanciero.Total = CalcularTotal();
+        }
     }
 }
