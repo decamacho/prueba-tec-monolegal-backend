@@ -19,7 +19,7 @@ var sendGridApiKey = builder.Configuration["SendGrid:ApiKey"];
 var fromEmail = builder.Configuration["SendGrid:FromEmail"];
 
 bool configLocalSendGrid = !string.IsNullOrWhiteSpace(sendGridApiKey) && sendGridApiKey != "SG_API_KEY"
-                           x&& !string.IsNullOrWhiteSpace(fromEmail) && fromEmail != "demoenvioemail@gmail.com";
+                           && !string.IsNullOrWhiteSpace(fromEmail) && fromEmail != "demoenvioemail@gmail.com";
 
 // inyeccion de la dependencia correcta basada en el entorno
 if (configLocalSendGrid)
